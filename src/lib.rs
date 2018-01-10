@@ -1,6 +1,6 @@
 //! A libaray for working with processes.
 //!
-//! This crate provides a `Command` type that is compatible with the 
+//! This crate provides a `Command` type that is compatible with the
 //! standard library's `std::process::Command` execpt that it can run in
 //! coroutine context without blocking the thread execution. When running
 //! in thread context it's the same as using `std::process::Command`.
@@ -33,20 +33,23 @@
 #![deny(missing_docs)]
 #![doc(html_root_url = "https://docs.rs/may_process/0.1")]
 
-use std::io;
+#[macro_use]
+#[doc(hiden)]
+extern crate may;
+
 use std::fmt;
 use std::ffi::OsStr;
 use std::path::Path;
-// use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::process::{self, ExitStatus, Output, Stdio};
 
 // #[path = "unix.rs"]
 // #[cfg(unix)]
 // mod imp;
 
-// #[path = "windows.rs"]
-// #[cfg(windows)]
-// mod imp;
+#[path = "windows.rs"]
+#[cfg(windows)]
+mod imp;
 
 /// A process builder, providing fine-grained control
 /// over how a new process should be spawned.
@@ -110,7 +113,9 @@ impl Command {
     ///         .expect("sh command failed to start");
     /// ```
     pub fn new<S: AsRef<OsStr>>(program: S) -> Command {
-        Command { inner: ::std::process::Command::new(program) }
+        Command {
+            inner: ::std::process::Command::new(program),
+        }
     }
 
     /// Add an argument to pass to the program.
@@ -173,7 +178,9 @@ impl Command {
     ///         .expect("ls command failed to start");
     /// ```
     pub fn args<I, S>(&mut self, args: I) -> &mut Command
-        where I: IntoIterator<Item=S>, S: AsRef<OsStr>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
     {
         self.inner.args(args);
         self
@@ -197,7 +204,9 @@ impl Command {
     ///         .expect("ls command failed to start");
     /// ```
     pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Command
-        where K: AsRef<OsStr>, V: AsRef<OsStr>
+    where
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
     {
         self.inner.env(key, val);
         self
@@ -228,7 +237,10 @@ impl Command {
     ///         .expect("printenv failed to start");
     /// ```
     pub fn envs<I, K, V>(&mut self, vars: I) -> &mut Command
-        where I: IntoIterator<Item=(K, V)>, K: AsRef<OsStr>, V: AsRef<OsStr>
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
     {
         self.inner.envs(vars);
         self
@@ -382,7 +394,9 @@ impl Command {
     ///         .expect("ls command failed to start");
     /// ```
     pub fn spawn(&mut self) -> io::Result<Child> {
-        self.inner.spawn().map(|p| Child { inner: p } )
+        self.inner.spawn().map(|p| Child {
+            inner: imp::Child::new(p),
+        })
     }
 
     /// Executes the command as a child process, waiting for it to finish and
@@ -412,7 +426,7 @@ impl Command {
         // TODO:
         unimplemented!()
         // self.inner.spawn(imp::Stdio::MakePipe, false).map(Child::from_inner)
-        //     .and_then(|p| p.wait_with_output())
+        // .and_then(|p| p.wait_with_output())
     }
 
     /// Executes a command as a child process, waiting for it to finish and
@@ -435,10 +449,7 @@ impl Command {
     /// assert!(status.success());
     /// ```
     pub fn status(&mut self) -> io::Result<ExitStatus> {
-        // TODO:
-        unimplemented!()
-        // self.inner.spawn(imp::Stdio::Inherit, true).map(Child::from_inner)
-        //           .and_then(|mut p| p.wait())
+        self.spawn().and_then(|mut p| p.wait())
     }
 }
 
@@ -450,7 +461,6 @@ impl fmt::Debug for Command {
         self.inner.fmt(f)
     }
 }
-
 
 /// Representation of a running or exited child process.
 ///
@@ -488,7 +498,7 @@ impl fmt::Debug for Command {
 /// [`wait`]: #method.wait
 pub struct Child {
     /// actual inner child
-    inner: process::Child,
+    inner: imp::Child,
 }
 
 impl fmt::Debug for Child {
@@ -564,10 +574,7 @@ impl Child {
     /// }
     /// ```
     pub fn wait(&mut self) -> io::Result<ExitStatus> {
-        // TODO:
-        unimplemented!()
-        // drop(self.stdin.take());
-        // self.handle.wait().map(ExitStatus)
+        self.inner.wait()
     }
 
     /// Attempts to collect the exit status of the child if it has already
@@ -605,9 +612,7 @@ impl Child {
     /// }
     /// ```
     pub fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
-        //TODO:
-        unimplemented!()
-        // Ok(self.handle.try_wait()?.map(ExitStatus))
+        self.inner.try_wait()
     }
 
     /// Simultaneously waits for the child to exit and collect all remaining
@@ -643,33 +648,38 @@ impl Child {
     /// ```
     ///
     pub fn wait_with_output(mut self) -> io::Result<Output> {
-        //TODO: 
-        unimplemented!()
+        // TODO: impl nonblocking read for stdio
+        let status = self.wait()?;
 
-        // drop(self.stdin.take());
+        let p = &mut self.inner.child;
+        let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
+        match (p.stdout.take(), p.stderr.take()) {
+            (None, None) => {}
+            (Some(mut out), None) => {
+                let res = out.read_to_end(&mut stdout);
+                res.unwrap();
+            }
+            (None, Some(mut err)) => {
+                let res = err.read_to_end(&mut stderr);
+                res.unwrap();
+            }
+            (Some(mut out), Some(mut err)) => join!(
+                {
+                    // let res = read2(out.inner, &mut stdout, err.inner, &mut stderr);
+                    let res = out.read_to_end(&mut stdout);
+                    res.unwrap();
+                },
+                {
+                    let res = err.read_to_end(&mut stderr);
+                    res.unwrap();
+                }
+            ),
+        }
 
-        // let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
-        // match (self.stdout.take(), self.stderr.take()) {
-        //     (None, None) => {}
-        //     (Some(mut out), None) => {
-        //         let res = out.read_to_end(&mut stdout);
-        //         res.unwrap();
-        //     }
-        //     (None, Some(mut err)) => {
-        //         let res = err.read_to_end(&mut stderr);
-        //         res.unwrap();
-        //     }
-        //     (Some(out), Some(err)) => {
-        //         let res = read2(out.inner, &mut stdout, err.inner, &mut stderr);
-        //         res.unwrap();
-        //     }
-        // }
-
-        // let status = self.wait()?;
-        // Ok(Output {
-        //     status,
-        //     stdout,
-        //     stderr,
-        // })
+        Ok(Output {
+            status,
+            stdout,
+            stderr,
+        })
     }
 }
