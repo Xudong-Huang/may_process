@@ -117,7 +117,10 @@ impl Child {
         let waiter = self.register()?;
 
         // wait for the completion
-        waiter.rx.recv().unwrap();
+        waiter.rx.recv().map_err(|e| {
+            let msg = format!("can't recv completion, err={}", e);
+            io::Error::new(io::ErrorKind::Other, msg)
+        })?;
 
         // get the result
         self.try_wait()?
