@@ -59,8 +59,8 @@ mod imp;
 /// program to be executed. Additional builder methods allow the configuration
 /// to be changed (for example, by adding arguments) prior to spawning:
 ///
-/// ```
-/// use std::process::Command;
+/// ```no_run
+/// use may_process::Command;
 ///
 /// let output = if cfg!(target_os = "windows") {
 ///     Command::new("cmd")
@@ -106,7 +106,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("sh")
     ///         .spawn()
@@ -114,7 +114,7 @@ impl Command {
     /// ```
     pub fn new<S: AsRef<OsStr>>(program: S) -> Command {
         Command {
-            inner: ::std::process::Command::new(program),
+            inner: process::Command::new(program),
         }
     }
 
@@ -123,7 +123,7 @@ impl Command {
     /// Only one argument can be passed per use. So instead of:
     ///
     /// ```no_run
-    /// # std::process::Command::new("sh")
+    /// # may_process::Command::new("sh")
     /// .arg("-C /path/to/repo")
     /// # ;
     /// ```
@@ -131,7 +131,7 @@ impl Command {
     /// usage would be:
     ///
     /// ```no_run
-    /// # std::process::Command::new("sh")
+    /// # may_process::Command::new("sh")
     /// .arg("-C")
     /// .arg("/path/to/repo")
     /// # ;
@@ -146,7 +146,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .arg("-l")
@@ -170,7 +170,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .args(&["-l", "-a"])
@@ -196,7 +196,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .env("PATH", "/bin")
@@ -219,8 +219,9 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::{Command, Stdio};
+    /// use may_process::Command;
     /// use std::env;
+    /// use std::process::Stdio;
     /// use std::collections::HashMap;
     ///
     /// let filtered_env : HashMap<String, String> =
@@ -253,7 +254,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .env_remove("PATH")
@@ -272,7 +273,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .env_clear()
@@ -291,7 +292,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .current_dir("/bin")
@@ -316,7 +317,8 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::{Command, Stdio};
+    /// use may_process::Command;
+    /// use std::process::Stdio;
     ///
     /// Command::new("ls")
     ///         .stdin(Stdio::null())
@@ -341,7 +343,8 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::{Command, Stdio};
+    /// use may_process::Command;
+    /// use std::process::Stdio;
     ///
     /// Command::new("ls")
     ///         .stdout(Stdio::null())
@@ -366,7 +369,8 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::{Command, Stdio};
+    /// use std::process::Stdio;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .stderr(Stdio::null())
@@ -387,7 +391,7 @@ impl Command {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// Command::new("ls")
     ///         .spawn()
@@ -410,7 +414,7 @@ impl Command {
     /// # Examples
     ///
     /// ```should_panic
-    /// use std::process::Command;
+    /// use may_process::Command;
     /// let output = Command::new("/bin/cat")
     ///                      .arg("file.txt")
     ///                      .output()
@@ -437,7 +441,7 @@ impl Command {
     /// # Examples
     ///
     /// ```should_panic
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// let status = Command::new("/bin/cat")
     ///                      .arg("file.txt")
@@ -481,7 +485,7 @@ impl fmt::Debug for Command {
 /// # Examples
 ///
 /// ```should_panic
-/// use std::process::Command;
+/// use may_process::Command;
 ///
 /// let mut child = Command::new("/bin/cat")
 ///                         .arg("file.txt")
@@ -516,7 +520,7 @@ impl Child {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// let mut command = Command::new("yes");
     /// if let Ok(mut child) = command.spawn() {
@@ -536,7 +540,7 @@ impl Child {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// let mut command = Command::new("ls");
     /// if let Ok(child) = command.spawn() {
@@ -563,7 +567,7 @@ impl Child {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// let mut command = Command::new("ls");
     /// if let Ok(mut child) = command.spawn() {
@@ -597,7 +601,7 @@ impl Child {
     /// Basic usage:
     ///
     /// ```no_run
-    /// use std::process::Command;
+    /// use may_process::Command;
     ///
     /// let mut child = Command::new("ls").spawn().unwrap();
     ///
@@ -632,7 +636,8 @@ impl Child {
     /// # Examples
     ///
     /// ```should_panic
-    /// use std::process::{Command, Stdio};
+    /// use may_process::Command;
+    /// use std::process::Stdio;
     ///
     /// let child = Command::new("/bin/cat")
     ///     .arg("file.txt")
