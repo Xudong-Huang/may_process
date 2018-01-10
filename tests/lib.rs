@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate may;
 extern crate may_process;
 
 use may_process::Command;
@@ -10,4 +12,25 @@ fn simple_test() {
     let exit_status = ret.unwrap();
     assert_eq!(exit_status.success(), true);
     assert_eq!(exit_status.code(), Some(0));
+}
+
+#[cfg(windows)]
+#[test]
+fn coroutine_test() {
+    join!(
+        {
+            let ret = Command::new("cmd").args(&["/C", "echo hello"]).status();
+            assert_eq!(ret.is_ok(), true);
+            let exit_status = ret.unwrap();
+            assert_eq!(exit_status.success(), true);
+            assert_eq!(exit_status.code(), Some(0));
+        },
+        {
+            let ret = Command::new("cmd").args(&["/C", "echo may"]).status();
+            assert_eq!(ret.is_ok(), true);
+            let exit_status = ret.unwrap();
+            assert_eq!(exit_status.success(), true);
+            assert_eq!(exit_status.code(), Some(0));
+        }
+    );
 }
