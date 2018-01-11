@@ -43,9 +43,9 @@ use std::path::Path;
 use std::io::{self, Read};
 use std::process::{self, ExitStatus, Output, Stdio};
 
-// #[path = "unix.rs"]
-// #[cfg(unix)]
-// mod imp;
+#[path = "unix.rs"]
+#[cfg(unix)]
+mod imp;
 
 #[path = "windows.rs"]
 #[cfg(windows)]
