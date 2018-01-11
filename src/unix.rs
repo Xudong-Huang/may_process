@@ -14,7 +14,9 @@
 //! the `may_signal` crate, which is a stream over signals being received.
 //!
 
+#[doc(hiden)]
 extern crate libc;
+#[doc(hiden)]
 extern crate may_signal;
 
 use std::fmt;

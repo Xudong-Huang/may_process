@@ -1,7 +1,7 @@
-//! A libaray for working with processes.
+//! A library for working with processes.
 //!
 //! This crate provides a `Command` type that is compatible with the
-//! standard library's `std::process::Command` execpt that it can run in
+//! standard library's `std::process::Command` except that it can run in
 //! coroutine context without blocking the thread execution. When running
 //! in thread context it's the same as using `std::process::Command`.
 //!

@@ -11,6 +11,7 @@
 //! just completes a `Oneshot`.
 //!
 
+#[doc(hiden)]
 extern crate winapi;
 
 use std::fmt;
