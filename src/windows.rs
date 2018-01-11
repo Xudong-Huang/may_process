@@ -22,8 +22,9 @@ use std::io;
 use std::os::windows::prelude::*;
 use std::os::windows::process::ExitStatusExt;
 use std::process::{self, ExitStatus};
+use std::sync::Arc;
 
-use may::sync::mpsc;
+use may::sync::Blocker;
 use self::winapi::shared::minwindef::*;
 use self::winapi::shared::winerror::*;
 use self::winapi::um::handleapi::*;
@@ -35,8 +36,7 @@ use self::winapi::um::winnt::*;
 
 struct Waiter {
     wait_object: HANDLE,
-    rx: mpsc::Receiver<()>,
-    tx: *mut Option<mpsc::Sender<()>>,
+    blocker: Arc<Blocker>,
 }
 
 unsafe impl Sync for Waiter {}
@@ -47,9 +47,8 @@ impl Drop for Waiter {
         unsafe {
             let rc = UnregisterWaitEx(self.wait_object, INVALID_HANDLE_VALUE);
             if rc == 0 {
-                panic!("failed to unregister: {}", io::Error::last_os_error());
+                eprintln!("failed to unregister: {}", io::Error::last_os_error());
             }
-            drop(Box::from_raw(self.tx));
         }
     }
 }
@@ -78,8 +77,8 @@ impl Child {
     }
 
     fn register(&mut self) -> io::Result<Waiter> {
-        let (tx, rx) = mpsc::channel();
-        let ptr = Box::into_raw(Box::new(Some(tx)));
+        let blocker = Blocker::current();
+        let ptr = Arc::into_raw(blocker.clone());
         let mut wait_object = 0 as *mut _;
         let rc = unsafe {
             RegisterWaitForSingleObject(
@@ -93,14 +92,13 @@ impl Child {
         };
         if rc == 0 {
             let err = io::Error::last_os_error();
-            drop(unsafe { Box::from_raw(ptr) });
+            drop(unsafe { Arc::from_raw(ptr) });
             return Err(err);
         }
 
         Ok(Waiter {
-            rx: rx,
-            tx: ptr,
-            wait_object: wait_object,
+            blocker,
+            wait_object,
         })
     }
 
@@ -117,10 +115,7 @@ impl Child {
         let waiter = self.register()?;
 
         // wait for the completion
-        waiter.rx.recv().map_err(|e| {
-            let msg = format!("can't recv completion, err={}", e);
-            io::Error::new(io::ErrorKind::Other, msg)
-        })?;
+        waiter.blocker.park(None).ok();
 
         // get the result
         self.try_wait()?
@@ -146,6 +141,6 @@ impl Child {
 }
 
 unsafe extern "system" fn callback(ptr: PVOID, _timer_fired: BOOLEAN) {
-    let complete = &mut *(ptr as *mut Option<mpsc::Sender<()>>);
-    drop(complete.take().unwrap().send(()));
+    let blocker = Arc::from_raw(ptr as *mut Blocker);
+    blocker.unpark();
 }

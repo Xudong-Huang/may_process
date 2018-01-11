@@ -7,7 +7,11 @@ use may_process::Command;
 #[cfg(windows)]
 #[test]
 fn simple_test() {
-    let ret = Command::new("cmd").args(&["/C", "echo hello"]).status();
+    // sleep 3 seconds on windows
+    let ret = Command::new("cmd")
+        .args(&["/C", "ping -n 3 127.0.0.1 > nul"])
+        .status();
+    // println!("ret = {:?}", ret);
     assert_eq!(ret.is_ok(), true);
     let exit_status = ret.unwrap();
     assert_eq!(exit_status.success(), true);
