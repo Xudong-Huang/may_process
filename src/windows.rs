@@ -10,10 +10,6 @@
 //! notified (e.g. the process exits) then we have a callback that basically
 //! just completes a `Oneshot`.
 //!
-//! The `poll_exit` implementation will attempt to wait for the process in a
-//! nonblocking fashion, but failing that it'll fire off a
-//! `RegisterWaitForSingleObject` and then wait on the other end of the oneshot
-//! from then on out.
 
 extern crate winapi;
 

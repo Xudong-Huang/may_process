@@ -428,8 +428,9 @@ impl Command {
     /// ```
     pub fn output(&mut self) -> io::Result<Output> {
         self.inner
-            .stdout(process::Stdio::piped())
             .stdin(process::Stdio::null())
+            .stdout(process::Stdio::piped())
+            .stderr(process::Stdio::piped())
             .spawn()
             .map(|p| Child {
                 inner: imp::Child::new(p),
