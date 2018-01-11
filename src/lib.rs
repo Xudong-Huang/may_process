@@ -59,7 +59,7 @@ mod imp;
 /// program to be executed. Additional builder methods allow the configuration
 /// to be changed (for example, by adding arguments) prior to spawning:
 ///
-/// ```no_run
+/// ```
 /// use may_process::Command;
 ///
 /// let output = if cfg!(target_os = "windows") {
@@ -427,10 +427,14 @@ impl Command {
     /// assert!(output.status.success());
     /// ```
     pub fn output(&mut self) -> io::Result<Output> {
-        // TODO:
-        unimplemented!()
-        // self.inner.spawn(imp::Stdio::MakePipe, false).map(Child::from_inner)
-        // .and_then(|p| p.wait_with_output())
+        self.inner
+            .stdout(process::Stdio::piped())
+            .stdin(process::Stdio::null())
+            .spawn()
+            .map(|p| Child {
+                inner: imp::Child::new(p),
+            })
+            .and_then(|p| p.wait_with_output())
     }
 
     /// Executes a command as a child process, waiting for it to finish and

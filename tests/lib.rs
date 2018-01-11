@@ -9,6 +9,20 @@ use may_process::Command;
 fn simple_test() {
     // sleep 3 seconds on windows
     let ret = Command::new("cmd")
+        .args(&["/C", "echo hello"])
+        .output()
+        .expect("failed to execute process");
+    // println!("ret = {:?}", ret);
+    let exit_status = ret.status;
+    assert_eq!(exit_status.success(), true);
+    assert_eq!(exit_status.code(), Some(0));
+}
+
+#[cfg(windows)]
+#[test]
+fn simple_wait_test() {
+    // sleep 3 seconds on windows
+    let ret = Command::new("cmd")
         .args(&["/C", "ping -n 3 127.0.0.1 > nul"])
         .status();
     // println!("ret = {:?}", ret);
