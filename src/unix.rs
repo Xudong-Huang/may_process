@@ -66,6 +66,8 @@ impl Child {
 
             match self.sigchld.recv() {
                 Ok(_) => {
+                    // clear all the remaining signals
+                    while let Ok(_) = self.sigchld.try_recv() {}
                     // the signal may be other child exist signal
                     // so we need to check again in the loop
                     continue;
