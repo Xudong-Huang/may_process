@@ -20,6 +20,21 @@ fn simple_test() {
 }
 
 #[test]
+fn coroutine_output() {
+    go!(|| {
+        // sleep 3 seconds on windows
+        let ret = Command::new("sh")
+            .args(&["-c", "echo hello"])
+            .output()
+            .expect("failed to execute process");
+        let exit_status = ret.status;
+        assert_eq!(exit_status.success(), true);
+        assert_eq!(exit_status.code(), Some(0));
+    }).join()
+        .expect("something wrong");
+}
+
+#[test]
 fn simple_wait_test() {
     // sleep 3 seconds on windows
     let ret = Command::new("sh").args(&["-c", "sleep 3"]).status();

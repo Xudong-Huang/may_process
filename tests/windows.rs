@@ -13,12 +13,27 @@ fn simple_test() {
         .args(&["/C", "echo hello"])
         .output()
         .expect("failed to execute process");
-    // println!("ret = {:?}", ret);
+    println!("ret = {:?}", ret);
     let exit_status = ret.status;
     assert_eq!(exit_status.success(), true);
     assert_eq!(exit_status.code(), Some(0));
 }
 
+#[test]
+fn coroutine_output() {
+    go!(|| {
+        // sleep 3 seconds on windows
+        let ret = Command::new("cmd")
+            .args(&["/C", "echo hello"])
+            .output()
+            .expect("failed to execute process");
+        println!("ret = {:?}", ret);
+        let exit_status = ret.status;
+        assert_eq!(exit_status.success(), true);
+        assert_eq!(exit_status.code(), Some(0));
+    }).join()
+        .expect("something wrong");
+}
 
 #[test]
 fn simple_wait_test() {

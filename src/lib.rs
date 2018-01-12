@@ -33,7 +33,6 @@
 #![deny(missing_docs)]
 #![doc(html_root_url = "https://docs.rs/may_process/0.1")]
 
-#[macro_use]
 #[doc(hiden)]
 extern crate may;
 
@@ -658,33 +657,25 @@ impl Child {
     /// ```
     ///
     pub fn wait_with_output(mut self) -> io::Result<Output> {
-        // TODO: impl nonblocking read for stdio
-        let status = self.wait()?;
-
-        let p = &mut self.inner.child;
+        use may::io::CoIo;
         let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
-        match (p.stdout.take(), p.stderr.take()) {
-            (None, None) => {}
-            (Some(mut out), None) => {
-                let res = out.read_to_end(&mut stdout);
-                res.unwrap();
-            }
-            (None, Some(mut err)) => {
-                let res = err.read_to_end(&mut stderr);
-                res.unwrap();
-            }
-            (Some(mut out), Some(mut err)) => join!(
-                {
-                    // let res = read2(out.inner, &mut stdout, err.inner, &mut stderr);
-                    let res = out.read_to_end(&mut stdout);
-                    res.unwrap();
-                },
-                {
-                    let res = err.read_to_end(&mut stderr);
-                    res.unwrap();
+        {
+            let p = &mut self.inner.child;
+            match (p.stdout.take(), p.stderr.take()) {
+                (None, None) => {}
+                (Some(out), None) => {
+                    CoIo::new(out)?.read_to_end(&mut stdout)?;
                 }
-            ),
+                (None, Some(err)) => {
+                    CoIo::new(err)?.read_to_end(&mut stderr)?;
+                }
+                (Some(out), Some(err)) => {
+                    CoIo::new(out)?.read_to_end(&mut stdout)?;
+                    CoIo::new(err)?.read_to_end(&mut stderr)?;
+                }
+            }
         }
+        let status = self.wait()?;
 
         Ok(Output {
             status,
