@@ -658,24 +658,24 @@ impl Child {
     ///
     pub fn wait_with_output(mut self) -> io::Result<Output> {
         use may::io::CoIo;
+
+        let status = self.wait()?;
+
         let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
-        {
-            let p = &mut self.inner.child;
-            match (p.stdout.take(), p.stderr.take()) {
-                (None, None) => {}
-                (Some(out), None) => {
-                    CoIo::new(out)?.read_to_end(&mut stdout)?;
-                }
-                (None, Some(err)) => {
-                    CoIo::new(err)?.read_to_end(&mut stderr)?;
-                }
-                (Some(out), Some(err)) => {
-                    CoIo::new(out)?.read_to_end(&mut stdout)?;
-                    CoIo::new(err)?.read_to_end(&mut stderr)?;
-                }
+        let p = &mut self.inner.child;
+        match (p.stdout.take(), p.stderr.take()) {
+            (None, None) => {}
+            (Some(out), None) => {
+                CoIo::new(out)?.read_to_end(&mut stdout)?;
+            }
+            (None, Some(err)) => {
+                CoIo::new(err)?.read_to_end(&mut stderr)?;
+            }
+            (Some(out), Some(err)) => {
+                CoIo::new(out)?.read_to_end(&mut stdout)?;
+                CoIo::new(err)?.read_to_end(&mut stderr)?;
             }
         }
-        let status = self.wait()?;
 
         Ok(Output {
             status,

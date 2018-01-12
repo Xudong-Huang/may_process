@@ -13,7 +13,7 @@ fn simple_test() {
         .args(&["/C", "echo hello"])
         .output()
         .expect("failed to execute process");
-    println!("ret = {:?}", ret);
+    // println!("ret = {:?}", ret);
     let exit_status = ret.status;
     assert_eq!(exit_status.success(), true);
     assert_eq!(exit_status.code(), Some(0));
@@ -27,7 +27,7 @@ fn coroutine_output() {
             .args(&["/C", "echo hello"])
             .output()
             .expect("failed to execute process");
-        println!("ret = {:?}", ret);
+        // println!("ret = {:?}", ret);
         let exit_status = ret.status;
         assert_eq!(exit_status.success(), true);
         assert_eq!(exit_status.code(), Some(0));
