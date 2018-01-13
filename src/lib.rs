@@ -659,23 +659,35 @@ impl Child {
     pub fn wait_with_output(mut self) -> io::Result<Output> {
         use may::io::CoIo;
 
+        // first create the io object
+        // if the remote pipe is closed, MacOs would return libc::EPIPE
+        // when register the fd to the event loop
+        macro_rules! async_read_data {
+            ($io: expr) => ({
+                let mut output = Vec::new();
+                match CoIo::new($io) {
+                    Ok(mut o) => o.read_to_end(&mut output)?,
+                    Err(e) => {
+                        // if failed to create CoIo then use default
+                        let mut out = e.into_data();
+                        out.read_to_end(&mut output)?
+                    }
+                };
+                output
+            })
+        }
+
         let status = self.wait()?;
 
-        let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
-        let p = &mut self.inner.child;
-        match (p.stdout.take(), p.stderr.take()) {
-            (None, None) => {}
-            (Some(out), None) => {
-                CoIo::new(out)?.read_to_end(&mut stdout)?;
-            }
-            (None, Some(err)) => {
-                CoIo::new(err)?.read_to_end(&mut stderr)?;
-            }
-            (Some(out), Some(err)) => {
-                CoIo::new(out)?.read_to_end(&mut stdout)?;
-                CoIo::new(err)?.read_to_end(&mut stderr)?;
-            }
-        }
+        let stdout = match self.inner.child.stdout.take() {
+            Some(o) => async_read_data!(o),
+            None => Vec::new(),
+        };
+
+        let stderr = match self.inner.child.stderr.take() {
+            Some(o) => async_read_data!(o),
+            None => Vec::new(),
+        };
 
         Ok(Output {
             status,
