@@ -30,8 +30,9 @@ fn coroutine_output() {
         let exit_status = ret.status;
         assert_eq!(exit_status.success(), true);
         assert_eq!(exit_status.code(), Some(0));
-    }).join()
-        .expect("something wrong");
+    })
+    .join()
+    .expect("something wrong");
 }
 
 #[test]

@@ -33,13 +33,10 @@
 #![deny(missing_docs)]
 #![doc(html_root_url = "https://docs.rs/may_process/0.1")]
 
-#[doc(hiden)]
-extern crate may;
-
-use std::fmt;
 use std::ffi::OsStr;
-use std::path::Path;
+use std::fmt;
 use std::io::{self, Read};
+use std::path::Path;
 use std::process::{self, ExitStatus, Output, Stdio};
 
 #[path = "unix.rs"]

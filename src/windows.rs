@@ -21,7 +21,6 @@ use std::os::windows::process::ExitStatusExt;
 use std::process::{self, ExitStatus};
 use std::sync::Arc;
 
-use may::sync::Blocker;
 use self::winapi::shared::minwindef::*;
 use self::winapi::shared::winerror::*;
 use self::winapi::um::handleapi::*;
@@ -30,6 +29,7 @@ use self::winapi::um::synchapi::*;
 use self::winapi::um::threadpoollegacyapiset::*;
 use self::winapi::um::winbase::*;
 use self::winapi::um::winnt::*;
+use may::sync::Blocker;
 
 struct Waiter {
     wait_object: HANDLE,
