@@ -17,8 +17,7 @@ travis-ci = { repository = "Xudong-Huang/may_process" }
 appveyor = { repository = "Xudong-Huang/may_process" }
 
 [dependencies]
-# may = "0.3"
-may = { git = "https://github.com/Xudong-Huang/may.git" }
+may = "0.3"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -36,3 +35,6 @@ features = [
   "winbase",
   "winnt",
 ]
+
+[patch.crates-io]
+may = { git = "https://github.com/Xudong-Huang/may.git" }
