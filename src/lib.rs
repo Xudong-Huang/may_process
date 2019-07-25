@@ -460,7 +460,7 @@ impl Command {
 
 impl fmt::Debug for Command {
     /// Format the program and arguments of a Command for display. Any
-    /// non-utf8 data is lossily converted using the utf8 replacement
+    /// non-utf8 data is loosely converted using the utf8 replacement
     /// character.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.inner.fmt(f)
@@ -660,7 +660,7 @@ impl Child {
         // if the remote pipe is closed, MacOs would return libc::EPIPE
         // when register the fd to the event loop
         macro_rules! async_read_data {
-            ($io: expr) => ({
+            ($io: expr) => {{
                 let mut output = Vec::new();
                 match CoIo::new($io) {
                     Ok(mut o) => o.read_to_end(&mut output)?,
@@ -671,7 +671,7 @@ impl Child {
                     }
                 };
                 output
-            })
+            }};
         }
 
         let status = self.wait()?;

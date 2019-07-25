@@ -17,7 +17,8 @@ travis-ci = { repository = "Xudong-Huang/may_process" }
 appveyor = { repository = "Xudong-Huang/may_process" }
 
 [dependencies]
-may = "0.3"
+# may = "0.3"
+may = { git = "https://github.com/Xudong-Huang/may.git" }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

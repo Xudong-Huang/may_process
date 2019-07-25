@@ -42,7 +42,7 @@ impl Child {
     pub fn new(child: process::Child) -> Child {
         Child {
             child: child,
-            sigchld: Signal::new(libc::SIGCHLD).expect("can't create signal strema"),
+            sigchld: Signal::new(libc::SIGCHLD).expect("can't create signal stream"),
         }
     }
 
